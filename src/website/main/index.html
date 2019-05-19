@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>Photo Magnifier</title>
+		<link href="style.css" type="text/css" rel="stylesheet">
+		<script src="scripts.js"></script>
+	</head>
+	<body>
+		<header>
+		</header>
+		<main>
+			<section id="title">
+				<div>
+					<h1>Photo Magnifier</h1>
+				</div>
+			</section>
+			<section id="content">
+				<div class="row">
+					<div class="column">
+						<p>Select photo to upload:</p>
+						<form action="" method="post" enctype="multipart/form-data">
+							<input type="file" name="fileToUpload" id="fileToUpload" class="inputfile" onchange="previewFile()">
+							<label for="fileToUpload">Upload photo</label><br>
+							<img src="" height="200" alt="Image preview...">
+						</form>
+					</div>
+					<div class="column">
+						<p>Select zoom:</p>
+						<form action="">
+							<input type="radio" name="zoom" value="x2"> x 2<br>
+							<input type="radio" name="zoom" value="x4"> x 4<br>
+							<input type="radio" name="zoom" value="x8"> x 8<br>
+							<input type="submit" class="button" value="Zoom in" name="submit" onclick="accessModel()">
+						</form>
+					</div>
+					<div class="column">
+						<p>Link to zoomed in photo:</p>
+						<p>link</p>
+					</div>
+				</div>
+			</section>
+		</main>
+		<footer>
+		</footer>
+	</body>
+</html>
