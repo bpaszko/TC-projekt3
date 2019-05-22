@@ -55,7 +55,7 @@ def save_image(img, prefix):
     # except ClientError as e:
     #     logging.error(e)
     #     return False
-    s3_url = 's3://{}/{}'.format(bucket_name, s3_img_path)
+    s3_url = 'http://{}.s3.amazonaws.com/{}'.format(bucket_name, s3_img_path)
     return s3_url
 
 
