@@ -13,6 +13,7 @@ for d, dirs, files in os.walk(os.path.join(os.getcwd(), 'local', 'lib')):
 
 import numpy as np
 import json
+import uuid
 from PIL import Image
 import onnx
 import onnx_caffe2.backend as backend
@@ -42,30 +43,20 @@ def load_image(event):
     return img
 
 
-def save_image1(img):
+def save_image(img, prefix):
+    name = uuid.uuid4().hex
     img = Image.fromarray(img)
     out_img = BytesIO()
     img.save(out_img, format='png')
     out_img.seek(0) 
     # try:
-    response = s3.upload_fileobj(out_img, bucket_name, 'original/12.jpg')
+    s3_img_path = '{}/{}.jpg'.format(prefix, name)
+    response = s3.upload_fileobj(out_img, bucket_name, s3_img_path)
     # except ClientError as e:
     #     logging.error(e)
     #     return False
-    return True
-
-
-def save_image2(img):
-    img = Image.fromarray(img)
-    out_img = BytesIO()
-    img.save(out_img, format='png')
-    out_img.seek(0) 
-    # try:
-    response = s3.upload_fileobj(out_img, bucket_name, 'enlarged/12.jpg')
-    # except ClientError as e:
-    #     logging.error(e)
-    #     return False
-    return True
+    s3_url = 's3://{}/{}'.format(bucket_name, s3_img_path)
+    return s3_url
 
 
 def run(img):
@@ -83,12 +74,12 @@ def run(img):
 def lambda_handler(event, context):
     img_lr = load_image(event)
     img_hr = run(img_lr)
-    save_image1(img_lr)
-    save_image2(img_hr)
+    url_lr = save_image(img_lr, 'original')
+    url_hr = save_image(img_hr, 'enlarged')
     
     return {
         'statusCode': '200',
-        'body': json.dumps('hello'),
+        'body': json.dumps({'img_url': url_hr}),
         'headers': {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
