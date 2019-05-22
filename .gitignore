@@ -1,6 +1,9 @@
 *.ipynb_checkpoints/
-data/*
+data/images
 *__pycache__
 *pyc
 
 BAK/
+*.pth
+data/envs/lambda_pack
+data/envs/*pem
