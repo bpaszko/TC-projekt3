@@ -1,3 +1,6 @@
-pytorch-SRResNet
-
 *.ipynb_checkpoints/
+data/*
+*__pycache__
+*pyc
+
+BAK/
