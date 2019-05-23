@@ -1,8 +1,14 @@
+import os
+import sys
 import json
+import uuid
 import boto3
 import ctypes
-import os
 import base64
+import pymysql
+import logging
+import datetime
+
 from io import BytesIO
 
 for d, dirs, files in os.walk(os.path.join(os.getcwd(), 'local', 'lib')):
@@ -12,16 +18,19 @@ for d, dirs, files in os.walk(os.path.join(os.getcwd(), 'local', 'lib')):
         ctypes.cdll.LoadLibrary(os.path.join(d, f))
 
 import numpy as np
-import json
-import uuid
 from PIL import Image
 import onnx
 import onnx_caffe2.backend as backend
 
-bucket_name = 'mini-tc-2019'
-s3_model_path = 'static/model.proto'
-local_model_path = '/tmp/model.proto'
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+
+# INIT S3 CONNECTION AND MODEL
+bucket_name = os.environ['BUCKET']
+s3_model_path = os.environ['MODEL_PATH']
+local_model_path = '/tmp/model.proto'
 
 s3 = boto3.client('s3')
 
@@ -30,6 +39,20 @@ if os.path.isfile(local_model_path) != True:
 
 graph = onnx.load(local_model_path)
 model = backend.prepare(graph, device="CPU")
+logger.info("SUCCESS: Model loaded properly.")
+
+# INIT RDS CONNECTION 
+name = os.environ['RDS_USER']
+password = os.environ['RDS_PASSWORD']
+rds_host  = os.environ['RDS_HOST']
+db_name = os.environ['RDS_NAME']
+
+try:
+    rds_conn = pymysql.connect(rds_host, user=name, passwd=password, db=db_name, connect_timeout=5)
+except:
+    logger.error("ERROR: Unexpected error: Could not connect to MySQL instance.")
+    sys.exit()
+logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
 
 def load_image(event):
@@ -71,12 +94,28 @@ def run(img):
     return img_hr.astype(np.uint8)
 
 
+def write_to_rds(original_url, enlarged_url):
+    date = datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')
+    create_sql = 'CREATE TABLE IF NOT EXISTS image_history ( \
+                    dat DATETIME NOT NULL, \
+                    original VARCHAR(255) NOT NULL, \
+                    enlarged VARCHAR(255) NOT NULL \
+                  )'
+    insert_sql = 'INSERT INTO image_history (dat, original, enlarged) VALUES ("{}", "{}", "{}")'.format(date, original_url, enlarged_url)
+    with rds_conn.cursor() as cur:
+        cur.execute(create_sql)  
+        rds_conn.commit()
+        cur.execute(insert_sql)
+    rds_conn.commit()
+
+
 def lambda_handler(event, context):
     img_lr = load_image(event)
     img_hr = run(img_lr)
     url_lr = save_image(img_lr, 'original')
     url_hr = save_image(img_hr, 'enlarged')
-    
+    write_to_rds(url_lr, url_hr)
+
     return {
         'statusCode': '200',
         'body': json.dumps({'img_url': url_hr}),

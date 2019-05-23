@@ -33,7 +33,7 @@ function accessModel(){
 var sendBase64ToServer = function(base64, h, w){
    var txt = document.getElementById('test_id')
    var httpPost = new XMLHttpRequest(),
-       path = 'https://0onclguim1.execute-api.eu-central-1.amazonaws.com/dev/run_model',
+       path = 'https://nsoaoib0c8.execute-api.us-east-1.amazonaws.com/dev/run_model',
        data = JSON.stringify({image: base64, height: h, width: w});
    httpPost.onreadystatechange = function(err) {
            if (httpPost.readyState == 4 && httpPost.status == 200){

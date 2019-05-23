@@ -5,5 +5,7 @@ data/images
 
 BAK/
 *.pth
-data/envs/lambda_pack
+data/envs/*/lambda_pack/*
 data/envs/*pem
+
+*.zip
