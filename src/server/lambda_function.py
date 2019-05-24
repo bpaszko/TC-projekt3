@@ -59,11 +59,13 @@ def load_image(event):
     body = event['body'].decode('utf-8')
     body = json.loads(body)
     data_url = body['image']
+    zoom = int(body['zoom'])
+    assert zoom in [2, 3, 4]
     offset = int(data_url.index(','))+1
     img_bytes = base64.b64decode(data_url[offset:])
     img = Image.open(BytesIO(img_bytes))
     img = np.array(img).astype(np.uint8)
-    return img
+    return img, zoom
 
 
 def save_image(img, prefix):
@@ -82,7 +84,17 @@ def save_image(img, prefix):
     return s3_url
 
 
-def run(img):
+def rescale(img, zoom):
+    if zoom == 4:
+        return img
+    h, w, _ = img.shape
+    new_h, new_w = int(h * zoom/4.0), int(w * zoom/4.0)
+    img = Image.fromarray(img)
+    img = img.resize(size=(new_w, new_h), resample=Image.BICUBIC)
+    return np.array(img)
+
+
+def run(img, zoom):
     model_input = img.astype(np.float32).transpose(2,0,1) / 255.
     model_input = np.expand_dims(model_input, axis=0)
     output = model.run(model_input)
@@ -90,8 +102,10 @@ def run(img):
     img_hr = img_hr.transpose(1,2,0)
     img_hr = img_hr * 255
     img_hr[img_hr<0] = 0
-    img_hr[img_hr>255.] = 255.            
-    return img_hr.astype(np.uint8)
+    img_hr[img_hr>255.] = 255.
+    img_hr = img_hr.astype(np.uint8)
+    img_hr = rescale(img_hr, zoom)
+    return img_hr
 
 
 def write_to_rds(original_url, enlarged_url):
@@ -110,8 +124,8 @@ def write_to_rds(original_url, enlarged_url):
 
 
 def lambda_handler(event, context):
-    img_lr = load_image(event)
-    img_hr = run(img_lr)
+    img_lr, zoom = load_image(event)
+    img_hr = run(img_lr, zoom)
     url_lr = save_image(img_lr, 'original')
     url_hr = save_image(img_hr, 'enlarged')
     write_to_rds(url_lr, url_hr)
