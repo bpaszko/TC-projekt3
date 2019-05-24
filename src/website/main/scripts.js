@@ -1,3 +1,14 @@
+var imgLink;
+
+
+function getImgLink() {
+	if (imgLink == null) {
+		imgLink = document.getElementById('link_id');
+	}
+	return imgLink;
+}
+
+
 function previewFile(){
    var preview = document.querySelector('img');
    var file    = document.querySelector('input[type=file]').files[0];
@@ -30,18 +41,17 @@ function accessModel(){
 }
 
 
-var sendBase64ToServer = function(base64, h, w){
-   var txt = document.getElementById('test_id')
+function sendBase64ToServer(base64, h, w) {
    var httpPost = new XMLHttpRequest(),
        path = 'https://nsoaoib0c8.execute-api.us-east-1.amazonaws.com/dev/run_model',
        data = JSON.stringify({image: base64, height: h, width: w});
    httpPost.onreadystatechange = function(err) {
            if (httpPost.readyState == 4 && httpPost.status == 200){
                console.log(httpPost.responseText);
-               txt.innerHTML = httpPost.responseText;
+			   processResponse(httpPost.responseText);
            } else {
                console.log(err);
-               txt.innerHTML = err;
+               getImgLink().innerHTML = err;
            }
        };
    // Set the content type of the request to json since that's what's being sent
@@ -50,3 +60,12 @@ var sendBase64ToServer = function(base64, h, w){
    httpPost.send(data);
 };
 
+
+function processResponse(responseText) {
+   var imgUrlObject = JSON.parse(responseText);
+   var imgUrl = imgUrlObject["img_url"];
+   getImgLink().innerHTML = imgUrl;
+   getImgLink().href = imgUrl;
+   var enlargedImg = document.getElementById('img_id');
+   enlargedImg.src = imgUrl;
+}
