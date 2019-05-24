@@ -14,12 +14,12 @@ section {
 
 section h1 {
 	font: 24pt;
-	color: #800000
+	color: #800000;
 }
 
 .row {
 	display: flex;
-	width: 100%
+	width: 100%;
 }
 
 .column {
