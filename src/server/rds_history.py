@@ -25,7 +25,7 @@ logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
 
 def get_history(event):
-    body = event['body'].decode('utf-8')
+    body = event['body']
     body = json.loads(body)
     img_per_site, page_num = int(body['linksPerPage']), int(body['pageNumber'])
     offset = (page_num - 1) * img_per_site
