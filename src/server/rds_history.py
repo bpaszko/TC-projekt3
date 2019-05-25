@@ -25,14 +25,16 @@ logger.info("SUCCESS: Connection to RDS MySQL instance succeeded")
 
 
 def get_history(event):
-    # TODO get site number and images per site from event
-    num, offset = 5, 0
+    body = event['body'].decode('utf-8')
+    body = json.loads(body)
+    img_per_site, page_num = int(body['linksPerPage']), int(body['pageNumber'])
+    offset = (page_num - 1) * img_per_site
     with conn.cursor() as cur:
-        cur.execute(f'SELECT dat, enlarged FROM image_history ORDER BY dat DESC LIMIT {num} OFFSET {offset}')
+        cur.execute(f'SELECT dat, enlarged FROM image_history ORDER BY dat DESC LIMIT {img_per_site} OFFSET {offset}')
         history = [[row[0].strftime('%Y-%m-%d %H:%M:%S'), row[1]] for row in cur]
         cur.execute('SELECT COUNT(*) FROM image_history')
         total_images = cur.fetchall()[0][0]
-    sites_num = math.ceil(total_images / num)
+    sites_num = math.ceil(total_images / img_per_site)
     return history, sites_num
 
 
