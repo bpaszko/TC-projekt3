@@ -1,20 +1,19 @@
 const linksPerPage = 10;
+var paginatorCreated = false;
 
 
 function loadPhotosHistory() {
 	var urlParams = new URLSearchParams(window.location.search);
 	var pageNumber = getPageNumber(urlParams);
+	loadList(pageNumber);
 	var maxPageNumber = getMaxPageNumber();
 	pageNumber = Math.min(pageNumber, maxPageNumber);
 	pageNumber = Math.max(pageNumber, 1);
-	loadList(pageNumber);
-	makePaginator(pageNumber, maxPageNumber);
 }
 
 
 function loadList(pageNumber) {
-	var linksList = getLinksList(pageNumber);
-	makeList(linksList, pageNumber);
+	getLinksList(pageNumber, linksPerPage);
 }
 
 
@@ -38,10 +37,28 @@ function getMaxPageNumber() {
 }
 
 
-function getLinksList(pageNumber) {
-	var linksList = ['img1','img2','img3','img4','img5','img6','img7','img8','img9','img10','img11','img12','img13','img14','img15','img16','img17','img18','img19','img20','img21','img22','img23','img24','img25','img26','img27','img28','img29','img30','img31'];
-	var startIndex = (pageNumber - 1) * linksPerPage;
-	return linksList.slice(startIndex, startIndex + linksPerPage);
+function getLinksList(pageNumber, linksPerPage) {
+	var httpPost = new XMLHttpRequest(),
+		path = 'https://nsoaoib0c8.execute-api.us-east-1.amazonaws.com/dev/get_history',
+		data = JSON.stringify({pageNumber: pageNumber, linksPerPage: linksPerPage});
+	httpPost.onreadystatechange = function(err) {
+			if (httpPost.readyState == 4 && httpPost.status == 200){
+				console.log(httpPost.responseText);
+				processResponse(httpPost.responseText, pageNumber);
+			} else {
+				console.log(err);
+			}
+	   };
+	// Set the content type of the request to json since that's what's being sent
+	httpPost.open("POST", path, true);
+	httpPost.setRequestHeader('Content-Type', 'application/json');
+	httpPost.send(data);
+}
+
+function processResponse(responseText, pageNumber) {
+	var historyObject = JSON.parse(responseText);
+	makeList(historyObject["history"], pageNumber);	
+	makePaginator(pageNumber, historyObject["sites"]);
 }
 
 
@@ -51,10 +68,11 @@ function makeList(array, pageNumber) {
 	
 	array.forEach(elem => {
 		var item = document.createElement('li');
-		var url = document.createElement('a');
-		url.innerHTML = elem;
-		url.href = elem;
-		item.appendChild(url);
+		var aTag = document.createElement('a');
+		var url = elem[1];
+		aTag.innerHTML = url;
+		aTag.href = url;
+		item.appendChild(aTag);
         list.appendChild(item);
 	});
 	
@@ -65,6 +83,10 @@ function makeList(array, pageNumber) {
 
 
 function makePaginator(pageNumber, maxPageNumber) {
+	if (paginatorCreated) {
+		return;
+	}
+	
 	Pagination.Init(document.getElementById('pagination'), {
         size: maxPageNumber, // pages size
         page: pageNumber,    // selected page
@@ -74,4 +96,6 @@ function makePaginator(pageNumber, maxPageNumber) {
 	Pagination.PageChanged = function() {
 		loadList(Pagination.page);
 	};
+	
+	paginatorCreated = true;
 }
