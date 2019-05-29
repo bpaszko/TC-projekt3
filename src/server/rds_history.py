@@ -28,6 +28,7 @@ def get_history(event):
     body = event['body']
     body = json.loads(body)
     img_per_site, page_num = int(body['linksPerPage']), int(body['pageNumber'])
+    assert img_per_site > 0 and page_num > 0
     offset = (page_num - 1) * img_per_site
     with conn.cursor() as cur:
         cur.execute(f'SELECT dat, enlarged FROM image_history ORDER BY dat DESC LIMIT {img_per_site} OFFSET {offset}')

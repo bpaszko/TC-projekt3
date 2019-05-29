@@ -74,12 +74,8 @@ def save_image(img, prefix):
     out_img = BytesIO()
     img.save(out_img, format='png')
     out_img.seek(0) 
-    # try:
     s3_img_path = '{}/{}.jpg'.format(prefix, name)
     response = s3.upload_fileobj(out_img, bucket_name, s3_img_path)
-    # except ClientError as e:
-    #     logging.error(e)
-    #     return False
     s3_url = 'http://{}.s3.amazonaws.com/{}'.format(bucket_name, s3_img_path)
     return s3_url
 
