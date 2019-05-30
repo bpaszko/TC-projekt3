@@ -12,13 +12,32 @@ function getImgLink() {
 function previewFile(){
 	var preview = document.querySelector('img');
 	var file    = document.querySelector('input[type=file]').files[0];
+	var filePath = file.name;
+	var allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+	
+	if(!allowedExtensions.exec(filePath)){
+        alert("Please upload file having extensions .jpeg/.jpg/.png only.");
+        preview.src = "";
+        return false;
+    }
+	
 	var reader  = new FileReader();
 
 	reader.onload = function () {
 		var image = new Image;
 		image.onload = function() {
-			preview.setAttribute('w', image.width);
-			preview.setAttribute('h', image.height);
+			var img_w = image.width;
+			var img_h = image.height;
+			
+			if(img_w > 75 || img_h > 75) {
+				alert("Photo should be max 75px x 75px.");
+				image.src = "";
+				preview.src = "";
+				return false;
+			}
+			
+			preview.setAttribute('w', img_w);
+			preview.setAttribute('h', img_h);
 		};
 		image.src = reader.result;
 		preview.src = reader.result;
@@ -35,6 +54,12 @@ function previewFile(){
 
 function accessModel(){
 	var image = document.querySelector('img');
+	
+	if(image.currentSrc == "") {
+		alert("Please upload photo.");
+		return false;
+	}
+	
 	h = image.getAttribute('h');
 	w = image.getAttribute('w');
 	z = getZoom();
