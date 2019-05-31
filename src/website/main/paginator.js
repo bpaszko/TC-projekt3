@@ -49,6 +49,7 @@ var Pagination = {
     Click: function() {
         Pagination.page = +this.innerHTML;
         Pagination.Start();
+		Pagination.PageChanged();
     },
 
     // previous page
@@ -58,6 +59,7 @@ var Pagination = {
             Pagination.page = 1;
         }
         Pagination.Start();
+		Pagination.PageChanged();
     },
 
     // next page
@@ -67,6 +69,7 @@ var Pagination = {
             Pagination.page = Pagination.size;
         }
         Pagination.Start();
+		Pagination.PageChanged();
     },
 
 
@@ -89,7 +92,6 @@ var Pagination = {
         Pagination.e.innerHTML = Pagination.code;
         Pagination.code = '';
         Pagination.Bind();
-		Pagination.PageChanged();
     },
 
     // find pagination type

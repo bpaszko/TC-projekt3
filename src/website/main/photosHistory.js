@@ -1,14 +1,10 @@
 const linksPerPage = 10;
-var paginatorCreated = false;
 
 
 function loadPhotosHistory() {
 	var urlParams = new URLSearchParams(window.location.search);
 	var pageNumber = getPageNumber(urlParams);
 	loadList(pageNumber);
-	var maxPageNumber = getMaxPageNumber();
-	pageNumber = Math.min(pageNumber, maxPageNumber);
-	pageNumber = Math.max(pageNumber, 1);
 }
 
 
@@ -21,7 +17,7 @@ function getPageNumber(urlParams) {
 	var pageNumber = urlParams.get('page');
 	pageNumber = parseInt(pageNumber, 10);
 	
-	if(isNaN(pageNumber)) {
+	if(isNaN(pageNumber) || pageNumber < 1) {
 		pageNumber = 1;
 	}
 	else {
@@ -29,11 +25,6 @@ function getPageNumber(urlParams) {
 	}
 	
 	return pageNumber;
-}
-
-
-function getMaxPageNumber() {
-	return 4;
 }
 
 
@@ -55,10 +46,17 @@ function getLinksList(pageNumber, linksPerPage) {
 	httpPost.send(data);
 }
 
+
 function processResponse(responseText, pageNumber) {
 	var historyObject = JSON.parse(responseText);
-	makeList(historyObject["history"], pageNumber);	
-	makePaginator(pageNumber, historyObject["sites"]);
+	var maxPageNumber = historyObject["sites"];
+	if(pageNumber <= maxPageNumber) {
+		makeList(historyObject["history"], pageNumber);	
+		makePaginator(pageNumber, historyObject["sites"]);
+	}
+	else {
+		loadList(maxPageNumber);
+	}
 }
 
 
@@ -83,11 +81,9 @@ function makeList(array, pageNumber) {
 
 
 function makePaginator(pageNumber, maxPageNumber) {
-	if (paginatorCreated) {
-		return;
-	}
+	var paginatorPlaceHolder = document.getElementById('pagination');
 	
-	Pagination.Init(document.getElementById('pagination'), {
+	Pagination.Init(paginatorPlaceHolder, {
         size: maxPageNumber, // pages size
         page: pageNumber,    // selected page
         step: 3              // pages before and after current
@@ -96,6 +92,4 @@ function makePaginator(pageNumber, maxPageNumber) {
 	Pagination.PageChanged = function() {
 		loadList(Pagination.page);
 	};
-	
-	paginatorCreated = true;
 }
